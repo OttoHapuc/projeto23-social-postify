@@ -1,26 +1,44 @@
-import { Injectable } from '@nestjs/common';
-import { InsertUserDTO } from './dto/insertUser-dto';
-import { User } from './entity/Users';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { UsersRepository } from './users.repository';
 
 @Injectable()
 export class UsersService {
-  users: User[] = [];
+  constructor(private readonly UsersRepository: UsersRepository) {}
 
-  deleteUser() {
-    return 'deleta absolutamente nada';
+  async getUserByEmail(email) {
+    return await this.UsersRepository.getUserByEmail(email);
   }
-  upUser(id) {
-    const user = this.users.find((e)=>e.id === id);
-    return user;
+  async deleteUser(id) {
+    const user = await this.getUser(id);
+    if (!user)
+      throw new HttpException('impossible action', HttpStatus.NOT_FOUND);
+    return await this.UsersRepository.deleteUser(id);
   }
-  inserUser({ name, email, password }: InsertUserDTO) {
-    const user = new User(name, email, password, this.users.length);
-    return this.users.push(user);
+  async upUser(id, { name, email, password }) {
+    const user = await this.getUser(id);
+    if (!user)
+      throw new HttpException('impossible to use user', HttpStatus.CONFLICT);
+    const existEmail = await this.getUserByEmail(email);
+    if (existEmail)
+      throw new HttpException('impossible to use email', HttpStatus.CONFLICT);
+    if (name) user.name = name;
+    if (email) user.email = email;
+    if (password) user.password = password;
+    return await this.UsersRepository.upUser(id, user);
   }
-  getUsers() {
-    return 'retorna o usuário';
+  async insertUser({ name, email, password }) {
+    const existEmail = await this.getUserByEmail(email);
+    if (existEmail)
+      throw new HttpException('impossible to use email', HttpStatus.CONFLICT);
+    return await this.UsersRepository.insertUser({ name, email, password });
   }
-  getAllUsers() {
-    return 'todos os usuários';
+  async getUser(id) {
+    const user = await this.getUser(id);
+    if (!user)
+      throw new HttpException('impossible action', HttpStatus.NOT_FOUND);
+    return await this.UsersRepository.getUser(id);
+  }
+  async getAllUsers() {
+    return await this.UsersRepository.getAllUsers();
   }
 }

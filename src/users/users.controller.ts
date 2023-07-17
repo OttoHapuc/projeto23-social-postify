@@ -14,22 +14,22 @@ export class UsersController {
   }
 
   @Get('user')
-  getUser() {
-    return this.usersService.getUsers();
+  getUser(@Param(':id', ParseIntPipe) id: number) {
+    return this.usersService.getUser(id);
   }
 
   @Post()
-  insertUser(@Body() body:InsertUserDTO) {
-    return this.usersService.inserUser(body);
+  insertUser(@Body() { name, email, password }:InsertUserDTO) {
+    return this.usersService.insertUser({ name, email, password });
   }
 
   @Put()
-  upUser(@Param(':id', ParseIntPipe) id: number, body: UpUserDTO) {
-    return this.usersService.upUser(id);
+  upUser(@Param(':id', ParseIntPipe) id: number, { name, email, password }: UpUserDTO) {
+    return this.usersService.upUser(id, { name, email, password });
   }
 
   @Delete()
-  deleteUser() {
-    return this.usersService.deleteUser();
+  deleteUser(@Param(':id', ParseIntPipe) id: number) {
+    return this.usersService.deleteUser(id);
   }
 }
